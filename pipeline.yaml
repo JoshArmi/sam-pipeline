@@ -1,0 +1,76 @@
+Parameters:
+  PipelineName:
+    Type: String
+    Default: Pipeline
+
+Resources:
+  ArtifactStore:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+
+  PipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "codepipeline.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "*"
+                Resource: "*"
+
+  Repository:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: PipelineRepo
+
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      ArtifactStore:
+        Location: !Ref ArtifactStore
+        Type: S3
+      Name: !Ref PipelineName
+      RestartExecutionOnUpdate: True
+      RoleArn: !GetAtt PipelineRole.Arn
+      Stages:
+        - Name: "Source"
+          Actions:
+            - InputArtifacts: []
+              Name: "Source"
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Version: "1"
+                Provider: CodeCommit
+              OutputArtifacts:
+                - Name: "CodeCommitSource"
+              Configuration:
+                BranchName: "master"
+                RepositoryName: !GetAtt Repository.Name
+        - Name: "AdministerPipeline"
+          Actions:
+            - Name: "AdministerPipeline"
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              Configuration:
+                ActionMode: REPLACE_ON_FAILURE
+                Capabilities: CAPABILITY_NAMED_IAM
+                RoleArn: !GetAtt PipelineRole.Arn
+                StackName: !Ref PipelineName
+                TemplatePath: "CodeCommitSource::pipeline.yaml"
+              InputArtifacts:
+                - Name: "CodeCommitSource"
+              RunOrder: 1
