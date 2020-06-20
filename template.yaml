@@ -5,6 +5,9 @@ Parameters:
   OrgId:
     Type: String
     Default: o-lhtws2v9du
+  BillingAccountId:
+    Type: String
+    Default: 941044151014
 
 Resources:
   SimpleStateMachine:
@@ -21,14 +24,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref DeployStack
 
-  GetAccountList:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/get_account_list/
-      Handler: function.handler
-      Runtime: python3.7
-
-  AssumeRole:
+  ListerAssumeRole:
     Type: AWS::IAM::Role
     Properties:
       Path: /
@@ -39,8 +35,44 @@ Resources:
               Service: ["lambda.amazonaws.com"]
             Action: "sts:AssumeRole"
       Policies:
-        - 
-          PolicyName: "root"
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: "Allow"
+                Action: "sts:AssumeRole"
+                Resource: !Join
+                  - ""
+                  - - "arn:aws:iam::"
+                    - !Ref BillingAccountId
+                    - ":role/AccountLister"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+
+  GetAccountList:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/get_account_list/
+      Environment:
+        Variables:
+          BILLING_ACCOUNT_ID: !Ref BillingAccountId
+          ROLE_NAME: AccountLister
+      Handler: function.handler
+      Runtime: python3.7
+
+  DeployerAssumeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ["lambda.amazonaws.com"]
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "root"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -48,6 +80,8 @@ Resources:
                 Effect: "Allow"
                 Action: "sts:AssumeRole"
                 Resource: "arn:aws:iam::*:role/CrossAccountDeploy"
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
   DeployStack:
     Type: AWS::Serverless::Function
@@ -62,7 +96,7 @@ Resources:
           STACK_NAME: Bucket
       Handler: function.handler
       Runtime: python3.7
-      Role: !GetAtt AssumeRole.Arn
+      Role: !GetAtt DeployerAssumeRole.Arn
 
   TemplateStore:
     Type: AWS::S3::Bucket

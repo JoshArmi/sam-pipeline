@@ -13,8 +13,8 @@ session = boto3.Session()
 
 def get_session(account_id):
     credentials = session.client('sts').assume_role(
-        RoleArn=f'arn:aws:iam::{account_id}:role/CrossAccountDeploy',
-        RoleSessionName='CrossAccountDeploy',
+        RoleArn=f'arn:aws:iam::{account_id}:role/{ROLE_NAME}',
+        RoleSessionName=f'{ROLE_NAME}',
     )['Credentials']
     return boto3.Session(
         aws_access_key_id=credentials["AccessKeyId"],
