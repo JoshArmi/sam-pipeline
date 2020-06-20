@@ -8,4 +8,5 @@ phases:
       - pip install --upgrade pip
       - pip install pipenv --user
       - pipenv install
-      - pipenv run sam deploy
+      - pipenv run sam validate
+      - pipenv run sam deploy --no-fail-on-empty-changeset
