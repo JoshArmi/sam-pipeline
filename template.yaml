@@ -28,6 +28,27 @@ Resources:
       Handler: function.handler
       Runtime: python3.7
 
+  AssumeRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ["lambda.amazonaws.com"]
+            Action: "sts:AssumeRole"
+      Policies:
+        - 
+          PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - 
+                Effect: "Allow"
+                Action: "sts:AssumeRole"
+                Resource: "arn:aws:iam::*:role/CrossAccountDeploy"
+
   DeployStack:
     Type: AWS::Serverless::Function
     Properties:
@@ -40,6 +61,7 @@ Resources:
           BUCKET_PREFIX: template.yaml
       Handler: function.handler
       Runtime: python3.7
+      Role: !GetAtt AssumeRole.Arn
 
   TemplateStore:
     Type: AWS::S3::Bucket
