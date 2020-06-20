@@ -1,6 +1,7 @@
 import os
 
 import boto3
+from botocore.exceptions import ClientError, ValidationError
 
 BUCKET_NAME = os.environ['BUCKET_NAME']
 BUCKET_PREFIX = os.environ['BUCKET_PREFIX']
@@ -32,10 +33,14 @@ def handler(event, context):
         stacks.extend(page['StackSummaries'])
     stack_names = [stack['StackName'] for stack in stacks]
     if STACK_NAME in stack_names:
-        cloudformation.update_stack(
-            StackName=STACK_NAME,
-            TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}'
-        )
+        try:
+            cloudformation.update_stack(
+                StackName=STACK_NAME,
+                TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}'
+            )
+        except ClientError as err:
+            if 'No updates are to be performed' not in str(err):
+                raise err
     else:
         cloudformation.create_stack(
             StackName=STACK_NAME,
