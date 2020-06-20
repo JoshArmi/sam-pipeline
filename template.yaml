@@ -59,6 +59,7 @@ Resources:
           BILLING_ACCOUNT_ID: !Ref BillingAccountId
           ROLE_NAME: AccountLister
       Handler: function.handler
+      Role: !GetAtt ListerAssumeRole.Arn
       Runtime: python3.7
 
   DeployerAssumeRole:
