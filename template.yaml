@@ -32,6 +32,12 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/deploy_stack/
+      Environment:
+        Variables:
+          ROLE_NAME: CrossAccountDeploy
+          STACK_NAME: Bucket
+          BUCKET_NAME: !Ref TemplateStore
+          BUCKET_PREFIX: template.yaml
       Handler: function.handler
       Runtime: python3.7
 
