@@ -1,0 +1,8 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+        python: 3.8
+  build:
+    commands:
+      - aws s3 cp templates/template.yaml s3://${BUCKET_NAME}
