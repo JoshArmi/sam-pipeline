@@ -1,6 +1,11 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
+Parameters:
+  OrgId:
+    Type: String
+    Default: o-lhtws2v9du
+
 Resources:
   SimpleStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -30,8 +35,39 @@ Resources:
       Handler: function.handler
       Runtime: python3.7
 
+  TemplateStore:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      AccessControl: Private
+
+  TemplateStorePolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TemplateStore
+      PolicyDocument:
+        Statement:
+          - Action: 's3:GetObject'
+            Effect: Allow
+            Principal: "*"
+            Resource: !Join
+              - ""
+              - - "arn:aws:s3:::"
+                - !Ref TemplateStore
+                - "/*"
+            Condition:
+              StringEquals:
+                "aws:PrincipalOrgId":
+                  - !Ref OrgId
+
 Outputs:
   StateMachineArn:
     Value: !Ref SimpleStateMachine
     Export: 
       Name: StateMachineArn
+
+  TemplateStoreName:
+    Value: !Ref TemplateStore
+    Export:
+      Name: TemplateStoreName
