@@ -1,2 +1,6 @@
 def handler(event, context):
-    print(event)
+    return {
+        "accounts": {
+            "list": ['285525127666', '192591144062']
+        }
+    }
