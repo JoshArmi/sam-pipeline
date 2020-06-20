@@ -152,7 +152,7 @@ Resources:
           Actions:
             - Name: "StateMachine"
               ActionTypeId:
-                Category: Invole
+                Category: Invoke
                 Owner: AWS
                 Version: "1"
                 Provider: StepFunctions
