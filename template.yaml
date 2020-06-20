@@ -57,7 +57,7 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref TemplateStore
           BUCKET_PREFIX: template.yaml
-          REGION: !Sub {AWS::Region}
+          REGION: !Sub ${AWS::Region}
           ROLE_NAME: CrossAccountDeploy
           STACK_NAME: Bucket
       Handler: function.handler
