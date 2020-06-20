@@ -50,6 +50,42 @@ Resources:
       TargetPipelineVersion: !GetAtt Pipeline.Version
       RegisterWithThirdParty: true
 
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: "/"
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: "codebuild.amazonaws.com"
+            Action: "sts:AssumeRole"
+      Policies:
+        - PolicyName: "root"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: "*"
+                Resource: "*"
+
+  Project:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: no_artifacts
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        Type: LINUX_CONTAINER
+        Variables:
+          - Name: BUCKET_NAME
+            Value: !Ref ArtifactStore
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source:
+        Type: CODEPIPELINE
+      TimeoutInMinutes: 10
+
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -81,9 +117,9 @@ Resources:
                 PollForSourceChanges: false
                 Repo: sam-pipeline
                 Branch: main
-        - Name: "AdministerPipeline"
+        - Name: "Administer"
           Actions:
-            - Name: "AdministerPipeline"
+            - Name: "Pipeline"
               ActionTypeId:
                 Category: Deploy
                 Owner: AWS
@@ -95,6 +131,20 @@ Resources:
                 RoleArn: !GetAtt PipelineRole.Arn
                 StackName: !Ref PipelineName
                 TemplatePath: "SourceOutput::pipeline.yaml"
+              InputArtifacts:
+                - Name: "SourceOutput"
+              RunOrder: 1
+                - Name: "AdministerPipeline"
+        - Name: "Deploy"
+          Actions:
+            - Name: "StateMachine"
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: "1"
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref Project
               InputArtifacts:
                 - Name: "SourceOutput"
               RunOrder: 1
