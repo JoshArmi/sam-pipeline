@@ -134,7 +134,6 @@ Resources:
               InputArtifacts:
                 - Name: "SourceOutput"
               RunOrder: 1
-                - Name: "AdministerPipeline"
         - Name: "Deploy"
           Actions:
             - Name: "StateMachine"
