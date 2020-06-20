@@ -23,3 +23,9 @@ Resources:
       CodeUri: functions/get_templates/
       Handler: app.handler
       Runtime: python3.7
+
+Outputs:
+  StateMachineArn:
+    Value: !Ref SimpleStateMachine
+    Export: 
+      Name: StateMachineArn

@@ -9,4 +9,4 @@ phases:
       - pip install pipenv --user
       - pipenv install
       - pipenv run sam validate
-      - pipenv run sam deploy --no-fail-on-empty-changeset
+      - pipenv run sam deploy --no-fail-on-empty-changeset --s3-bucket ${BUCKET_NAME}
