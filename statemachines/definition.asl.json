@@ -7,6 +7,11 @@
             "Resource": "${GetAccountListArn}",
             "Next": "DeployStacks"
         },
+        "ReportError": {
+            "Type": "Task",
+            "Resource": "${ReportErrorArn}",
+            "End": true
+        },
         "DeployStacks": {
             "Type": "Map",
             "InputPath": "$.accounts",
@@ -22,6 +27,14 @@
                     }
                 }
             },
+            "Catch": [
+                {
+                    "ErrorEquals": [
+                        "States.TaskFailed"
+                    ],
+                    "Next": "ReportError"
+                }
+            ],
             "End": true
         }
     }
