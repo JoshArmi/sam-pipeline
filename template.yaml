@@ -24,6 +24,9 @@ Resources:
             FunctionName: !Ref GetAccountList
         - LambdaInvokePolicy:
             FunctionName: !Ref DeployStack
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ReportError
+
 
   ListerAssumeRole:
     Type: AWS::IAM::Role
