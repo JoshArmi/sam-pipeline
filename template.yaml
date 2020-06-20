@@ -5,22 +5,28 @@ Resources:
   SimpleStateMachine:
     Type: AWS::Serverless::StateMachine
     Properties:
-      Definition:
-        StartAt: GetTemplates
-        States:
-          GetTemplates:
-            Resource: !GetAtt GetAccountList.Arn
-            Type: Task
-            End: true
+      DefinitionUri: ./statemachines/definition.asl.json
+      DefinitionSubstitutions:
+        GetAccountListArn: !GetAtt GetAccountList.Arn
+        DeployStackArn: !GetAtt DeployStack.Arn
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - LambdaInvokePolicy:
             FunctionName: !Ref GetAccountList
+        - LambdaInvokePolicy:
+            FunctionName: !Ref DeployStack
 
   GetAccountList:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/get_account_list/
+      Handler: function.handler
+      Runtime: python3.7
+
+  DeployStack:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/deploy_stack/
       Handler: function.handler
       Runtime: python3.7
 
