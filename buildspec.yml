@@ -7,5 +7,5 @@ phases:
     commands:
       - pip install --upgrade pip
       - pip install pipenv --user
-      - pipenv install awscli aws-sam-cli
-      - pipenv run sam deploy --template-file template.yaml --s3-bucket $BUCKET_NAME
+      - pipenv install
+      - pipenv run sam deploy
