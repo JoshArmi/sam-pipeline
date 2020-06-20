@@ -6,10 +6,20 @@ Resources:
     Type: AWS::Serverless::StateMachine
     Properties:
       Definition:
-        StartAt: Single State
+        StartAt: GetTemplates
         States:
-          Single State:
-            Type: Pass
+          GetTemplates:
+            Resource: !GetAtt GetTemplatesFunction.Arn
+            Type: Task
             End: true
       Policies:
         - CloudWatchPutMetricPolicy: {}
+        - LambdaInvokePolicy:
+            FunctionName: !Ref GetTemplatesFunction
+
+  GetTemplatesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: functions/get_templates/
+      Handler: app.handler
+      Runtime: python3.7
