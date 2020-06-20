@@ -25,6 +25,7 @@ def get_session(account_id):
 
 
 def handler(event, context):
+    print(event)
     cross_session = get_session(event)
     cloudformation = cross_session.client('cloudformation')
     stacks = []
@@ -39,9 +40,10 @@ def handler(event, context):
                 TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}'
             )
         except ClientError as err:
+            print(err)
             if 'No updates are to be performed' not in str(err):
                 raise err
-            raise {"Error": err, "Account": event}
+            raise Exception({"Error": err, "Account": event})
     else:
         cloudformation.create_stack(
             StackName=STACK_NAME,
