@@ -6,6 +6,7 @@ Parameters:
 Resources:
   ArtifactStore:
     Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
     Properties:
       AccessControl: Private
 
@@ -17,7 +18,10 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: "codepipeline.amazonaws.com"
+              Service: [
+                "codepipeline.amazonaws.com",
+                "cloudformation.amazonaws.com"
+              ]
             Action: "sts:AssumeRole"
       Policies:
         - PolicyName: "root"
@@ -28,10 +32,23 @@ Resources:
                 Action: "*"
                 Resource: "*"
 
-  Repository:
-    Type: AWS::CodeCommit::Repository
+  Webhook: 
+    Type: 'AWS::CodePipeline::Webhook' 
     Properties:
-      RepositoryName: PipelineRepo
+      AuthenticationConfiguration: 
+        SecretToken: !Join 
+          - ":"
+          - - "{{resolve:secretsmanager"
+            - !ImportValue GitHubOAuthSecretName
+            - "SecretString:token}}"
+      Filters: 
+      - JsonPath: "$.ref" 
+        MatchEquals: refs/heads/{Branch} 
+      Authentication: GITHUB_HMAC
+      TargetPipeline: !Ref Pipeline
+      TargetAction: Source
+      TargetPipelineVersion: !GetAtt Pipeline.Version
+      RegisterWithThirdParty: true
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -49,14 +66,21 @@ Resources:
               Name: "Source"
               ActionTypeId:
                 Category: Source
-                Owner: AWS
-                Version: "1"
-                Provider: CodeCommit
+                Owner: ThirdParty
+                Version: 1
+                Provider: GitHub
               OutputArtifacts:
-                - Name: "CodeCommitSource"
+                - Name: SourceOutput
               Configuration:
-                BranchName: "master"
-                RepositoryName: !GetAtt Repository.Name
+                Owner: JoshArmi 
+                OAuthToken: !Join
+                  - ":"
+                  - - "{{resolve:secretsmanager"
+                    - !ImportValue GitHubOAuthSecretName
+                    - "SecretString:token}}"
+                PollForSourceChanges: false
+                Repo: sam-pipeline
+                Branch: main
         - Name: "AdministerPipeline"
           Actions:
             - Name: "AdministerPipeline"
@@ -70,7 +94,7 @@ Resources:
                 Capabilities: CAPABILITY_NAMED_IAM
                 RoleArn: !GetAtt PipelineRole.Arn
                 StackName: !Ref PipelineName
-                TemplatePath: "CodeCommitSource::pipeline.yaml"
+                TemplatePath: "SourceOutput::pipeline.yaml"
               InputArtifacts:
-                - Name: "CodeCommitSource"
+                - Name: "SourceOutput"
               RunOrder: 1
