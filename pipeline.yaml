@@ -7,6 +7,7 @@ Resources:
   ArtifactStore:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       AccessControl: Private
 
@@ -73,12 +74,12 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties:
       Artifacts:
-        Type: no_artifacts
+        Type: NO_ARTIFACTS
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
         Type: LINUX_CONTAINER
-        Variables:
+        EnvironmentVariables:
           - Name: BUCKET_NAME
             Value: !Ref ArtifactStore
       ServiceRole: !GetAtt CodeBuildRole.Arn
@@ -103,7 +104,7 @@ Resources:
               ActionTypeId:
                 Category: Source
                 Owner: ThirdParty
-                Version: 1
+                Version: '1'
                 Provider: GitHub
               OutputArtifacts:
                 - Name: SourceOutput
