@@ -9,19 +9,19 @@ Resources:
         StartAt: GetTemplates
         States:
           GetTemplates:
-            Resource: !GetAtt GetTemplatesFunction.Arn
+            Resource: !GetAtt GetAccountList.Arn
             Type: Task
             End: true
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - LambdaInvokePolicy:
-            FunctionName: !Ref GetTemplatesFunction
+            FunctionName: !Ref GetAccountList
 
-  GetTemplatesFunction:
+  GetAccountList:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: functions/get_templates/
-      Handler: app.handler
+      CodeUri: functions/get_account_list/
+      Handler: function.handler
       Runtime: python3.7
 
 Outputs:
