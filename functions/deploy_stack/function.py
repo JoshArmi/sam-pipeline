@@ -42,8 +42,7 @@ def handler(event, context):
         except ClientError as err:
             print(err)
             if 'No updates are to be performed' not in str(err):
-                raise err
-            raise Exception({"Error": err, "Account": event})
+                raise Exception({"Error": err, "Account": event})
     else:
         cloudformation.create_stack(
             StackName=STACK_NAME,
