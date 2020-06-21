@@ -17,11 +17,58 @@ Resources:
             Action:
               - "sts:AssumeRole"
       Policies:
-        - PolicyName: "root"
+        - PolicyName: "CreateStack"
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
-                Action: "*"
+                Action: 
+                  - "cloudformation:CreateStack"
+                  - "cloudformation:UpdateStack"
+                  - "cloudformation:CreateChangeSet"
                 Resource: "*"
+                Condition:
+                  StringLike:
+                    "aws:RequestTag/Owner": "JoshArmi"
+        - PolicyName: "DeleteStack"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "cloudformation:DeleteStack"
+                Resource: "*"
+                Condition:
+                  StringLike:
+                    "aws:ResourceTag/Owner": "JoshArmi"
+        - PolicyName: "CreateBucket"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:CreateBucket"
+                Resource: "*"
+        - PolicyName: "PutObjects"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:PutObject"
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    "s3:RequestObjectTag/Owner": JoshArmi
+        - PolicyName: "GetObjects"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:PutObject"
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    "s3:ExistingObjectTag/Owner": JoshArmi
       RoleName: CrossAccountDeploy

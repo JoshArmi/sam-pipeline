@@ -37,7 +37,11 @@ def handler(event, context):
         try:
             cloudformation.update_stack(
                 StackName=STACK_NAME,
-                TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}'
+                TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}',
+                Tags=[{
+                    "Key": "Owner",
+                    "Value": "JoshArmi"
+                }],
             )
         except ClientError as err:
             print(err)
@@ -46,5 +50,9 @@ def handler(event, context):
     else:
         cloudformation.create_stack(
             StackName=STACK_NAME,
-            TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}'
+            TemplateURL=f'https://{BUCKET_NAME}.s3-{REGION}.amazonaws.com/{BUCKET_PREFIX}',
+            Tags=[{
+                "Key": "Owner",
+                "Value": "JoshArmi"
+            }],
         )
