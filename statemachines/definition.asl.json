@@ -5,6 +5,36 @@
         "GetAccounts": {
             "Type": "Task",
             "Resource": "${GetAccountListArn}",
+            "Next": "DeployStacks"
+        },
+        "DeployStacks": {
+            "Type": "Map",
+            "InputPath": "$.accounts",
+            "ItemsPath": "$.list",
+            "MaxConcurrency": 0,
+            "Iterator": {
+                "StartAt": "DeployStack",
+                "States": {
+                    "DeployStack": {
+                        "Type": "Task",
+                        "Resource": "${DeployStackArn}",
+                        "Catch": [
+                            {
+                                "ErrorEquals": [
+                                    "States.TaskFailed"
+                                ],
+                                "Next": "ReportError"
+                            }
+                        ],
+                        "End": true
+                    },
+                    "ReportError": {
+                        "Type": "Task",
+                        "Resource": "${ReportErrorArn}",
+                        "End": true
+                    }
+                }
+            },
             "End": true
         }
     }
