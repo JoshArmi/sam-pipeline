@@ -178,7 +178,7 @@ Resources:
                 ProjectName: !Ref TemplateProject
               InputArtifacts:
                 - Name: "SourceOutput"
-              RunOrder: 1
+              RunOrder: 2
         - Name: "Execute"
           Actions:
             - Name: "StateMachine"
