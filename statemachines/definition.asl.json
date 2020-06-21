@@ -1,0 +1,11 @@
+{
+    "Comment": "DIY StackSets",
+    "StartAt": "GetAccounts",
+    "States": {
+        "GetAccounts": {
+            "Type": "Task",
+            "Resource": "${GetAccountListArn}",
+            "End": true
+        }
+    }
+}

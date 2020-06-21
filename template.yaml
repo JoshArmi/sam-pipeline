@@ -1,20 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
-Parameters:
-  OrgId:
-    Type: String
-    Default: o-lhtws2v9du
-  BillingAccountId:
-    Type: String
-    Default: 941044151014
-  EmailAddress:
-    Type: String
-    Default: josh.armitage@outlook.com
-  TemplateStoreBucketName:
-    Type: String
-    Default: josharmi-templatestore
-
 Resources:
   SimpleStateMachine:
     Type: AWS::Serverless::StateMachine
@@ -22,165 +8,20 @@ Resources:
       DefinitionUri: ./statemachines/definition.asl.json
       DefinitionSubstitutions:
         GetAccountListArn: !GetAtt GetAccountList.Arn
-        DeployStackArn: !GetAtt DeployStack.Arn
-        ReportErrorArn: !GetAtt ReportError.Arn
       Policies:
         - CloudWatchPutMetricPolicy: {}
         - LambdaInvokePolicy:
             FunctionName: !Ref GetAccountList
-        - LambdaInvokePolicy:
-            FunctionName: !Ref DeployStack
-        - LambdaInvokePolicy:
-            FunctionName: !Ref ReportError
-
-
-  ListerAssumeRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ["lambda.amazonaws.com"]
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - 
-                Effect: "Allow"
-                Action: "sts:AssumeRole"
-                Resource: !Join
-                  - ""
-                  - - "arn:aws:iam::"
-                    - !Ref BillingAccountId
-                    - ":role/AccountLister"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 
   GetAccountList:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: functions/get_account_list/
-      Environment:
-        Variables:
-          BILLING_ACCOUNT_ID: !Ref BillingAccountId
-          ROLE_NAME: AccountLister
-      Handler: function.handler
-      Role: !GetAtt ListerAssumeRole.Arn
-      Runtime: python3.7
-
-  DeployerAssumeRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ["lambda.amazonaws.com"]
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action: "sts:AssumeRole"
-                Resource: "arn:aws:iam::*:role/CrossAccountDeploy"
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-
-  DeployStack:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/deploy_stack/
-      Environment:
-        Variables:
-          BUCKET_NAME: !Ref TemplateStore
-          BUCKET_PREFIX: template.yaml
-          REGION: !Sub ${AWS::Region}
-          ROLE_NAME: CrossAccountDeploy
-          STACK_NAME: Bucket
       Handler: function.handler
       Runtime: python3.7
-      Role: !GetAtt DeployerAssumeRole.Arn
-
-  ReporterRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: /
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ["lambda.amazonaws.com"]
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action: "sns:Publish"
-                Resource: !Ref ReportingTopic
-      ManagedPolicyArns:
-        - "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-
-  ReportError:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: functions/report_error/
-      Handler: function.handler
-      Environment:
-        Variables:
-          TOPIC_ARN: !Ref ReportingTopic
-      Runtime: python3.7
-      Role: !GetAtt ReporterRole.Arn
-
-  ReportingTopic:
-    Type: AWS::SNS::Topic
-    Properties:
-      Subscription:
-        - Endpoint: !Ref EmailAddress
-          Protocol: email
-
-  TemplateStore:
-    Type: AWS::S3::Bucket
-    DeletionPolicy: Retain
-    UpdateReplacePolicy: Retain
-    Properties:
-      AccessControl: Private
-      BucketName: !Ref TemplateStoreBucketName
-
-  TemplateStorePolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref TemplateStore
-      PolicyDocument:
-        Statement:
-          - Action: 's3:GetObject'
-            Effect: Allow
-            Principal: "*"
-            Resource: !Join
-              - ""
-              - - "arn:aws:s3:::"
-                - !Ref TemplateStore
-                - "/*"
-            Condition:
-              StringEquals:
-                "aws:PrincipalOrgId":
-                  - !Ref OrgId
 
 Outputs:
   StateMachineArn:
     Value: !Ref SimpleStateMachine
     Export: 
       Name: StateMachineArn
-
-  TemplateStoreName:
-    Value: !Ref TemplateStore
-    Export:
-      Name: TemplateStoreName
