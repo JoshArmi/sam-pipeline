@@ -30,6 +30,14 @@ Resources:
                 Condition:
                   StringLike:
                     "aws:RequestTag/Owner": "JoshArmi"
+        - PolicyName: "ListStacks"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "cloudformation:ListStacks"
+                Resource: "*"
         - PolicyName: "DeleteStack"
           PolicyDocument:
             Version: "2012-10-17"
