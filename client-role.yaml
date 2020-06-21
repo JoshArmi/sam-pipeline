@@ -1,0 +1,90 @@
+Parameters:
+  MasterAccountId:
+    Type: String
+    Default: 527937274367
+
+Resources:
+  Role:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              AWS:
+                - !Sub "arn:aws:iam::${MasterAccountId}:root"
+            Action:
+              - "sts:AssumeRole"
+      Policies:
+        - PolicyName: "CreateStack"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "cloudformation:CreateStack"
+                  - "cloudformation:UpdateStack"
+                  - "cloudformation:CreateChangeSet"
+                Resource: "*"
+                Condition:
+                  StringLike:
+                    "aws:RequestTag/Owner": "JoshArmi"
+        - PolicyName: "ListStacks"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "cloudformation:ListStacks"
+                Resource: "*"
+        - PolicyName: "DeleteStack"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "cloudformation:DeleteStack"
+                Resource: "*"
+                Condition:
+                  StringLike:
+                    "aws:ResourceTag/Owner": "JoshArmi"
+        - PolicyName: "CreateBucket"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:CreateBucket"
+                Resource: "*"
+        - PolicyName: "PutObjects"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:PutObject"
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    "s3:RequestObjectTag/Owner": JoshArmi
+        - PolicyName: "GetObjects"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:GetObject"
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    "s3:ExistingObjectTag/Owner": JoshArmi
+        - PolicyName: "GetTemplates"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action: 
+                  - "s3:GetObject"
+                Resource: "arn:aws:s3:::josharmi-templatestore/*"
+      RoleName: CrossAccountDeploy
