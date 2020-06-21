@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "PipelineName",
+        "ParameterValue": "Pipeline"
+    },
+    {
+        "ParameterKey": "GitHubOwner",
+        "ParameterValue": "JoshArmi"
+    },
+    {
+        "ParameterKey": "RepositoryName",
+        "ParameterValue": "sam-pipeline"
+    },
+    {
+        "ParameterKey": "Branch",
+        "ParameterValue": "main"
+    }
+]

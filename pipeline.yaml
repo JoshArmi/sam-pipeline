@@ -1,16 +1,12 @@
 Parameters:
   PipelineName:
     Type: String
-    Default: Pipeline
   GitHubOwner:
     Type: String
-    Default: JoshArmi
   RepositoryName:
     Type: String
-    Default: sam-pipeline
   Branch:
     Type: String
-    Default: main
 
 Resources:
   ArtifactStore:
