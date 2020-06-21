@@ -2,6 +2,15 @@ Parameters:
   PipelineName:
     Type: String
     Default: Pipeline
+  GitHubOwner:
+    Type: String
+    Default: JoshArmi
+  RepositoryName:
+    Type: String
+    Default: sam-pipeline
+  Branch:
+    Type: String
+    Default: main
 
 Resources:
   ArtifactStore:
@@ -51,61 +60,6 @@ Resources:
       TargetPipelineVersion: !GetAtt Pipeline.Version
       RegisterWithThirdParty: true
 
-  CodeBuildRole:
-    Type: AWS::IAM::Role
-    Properties:
-      Path: "/"
-      AssumeRolePolicyDocument:
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: "codebuild.amazonaws.com"
-            Action: "sts:AssumeRole"
-      Policies:
-        - PolicyName: "root"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action: "*"
-                Resource: "*"
-
-  Project:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-        Type: LINUX_CONTAINER
-        EnvironmentVariables:
-          - Name: BUCKET_NAME
-            Value: !Ref ArtifactStore
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Source:
-        BuildSpec: buildspec.yaml
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-
-  TemplateProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-        Type: LINUX_CONTAINER
-        EnvironmentVariables:
-          - Name: BUCKET_NAME
-            Value: !ImportValue TemplateStoreName
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Source:
-        BuildSpec: templates/buildspec.yaml
-        Type: CODEPIPELINE
-      TimeoutInMinutes: 10
-
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
@@ -128,15 +82,15 @@ Resources:
               OutputArtifacts:
                 - Name: SourceOutput
               Configuration:
-                Owner: JoshArmi 
+                Owner: !Ref GitHubOwner 
                 OAuthToken: !Join
                   - ":"
                   - - "{{resolve:secretsmanager"
                     - !ImportValue GitHubOAuthSecretName
                     - "SecretString:token}}"
                 PollForSourceChanges: false
-                Repo: sam-pipeline
-                Branch: main
+                Repo: !Ref RepositoryName
+                Branch: !Ref Branch
         - Name: "Administer"
           Actions:
             - Name: "Pipeline"
@@ -153,39 +107,4 @@ Resources:
                 TemplatePath: "SourceOutput::pipeline.yaml"
               InputArtifacts:
                 - Name: "SourceOutput"
-              RunOrder: 1
-        - Name: "Deploy"
-          Actions:
-            - Name: "StateMachine"
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: "1"
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref Project
-              InputArtifacts:
-                - Name: "SourceOutput"
-              RunOrder: 1
-            - Name: "Templates"
-              ActionTypeId:
-                Category: Build
-                Owner: AWS
-                Version: "1"
-                Provider: CodeBuild
-              Configuration:
-                ProjectName: !Ref TemplateProject
-              InputArtifacts:
-                - Name: "SourceOutput"
-              RunOrder: 2
-        - Name: "Execute"
-          Actions:
-            - Name: "StateMachine"
-              ActionTypeId:
-                Category: Invoke
-                Owner: AWS
-                Version: "1"
-                Provider: StepFunctions
-              Configuration:
-                StateMachineArn: !ImportValue StateMachineArn
               RunOrder: 1
