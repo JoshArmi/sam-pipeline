@@ -135,7 +135,7 @@ Resources:
         Variables:
           TOPIC_ARN: !Ref ReportingTopic
       Runtime: python3.7
-      Role: !GetAtt DeployerAssumeRole.Arn
+      Role: !GetAtt ReporterRole.Arn
 
   ReportingTopic:
     Type: AWS::SNS::Topic
