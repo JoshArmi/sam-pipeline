@@ -99,7 +99,8 @@ Resources:
         Type: LINUX_CONTAINER
         EnvironmentVariables:
           - Name: BUCKET_NAME
-            Value: !ImportValue TemplateStoreName
+            Value: josharmi-templatestore
+            # Value: !ImportValue TemplateStoreName
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source:
         BuildSpec: templates/buildspec.yaml
