@@ -155,3 +155,14 @@ Resources:
               InputArtifacts:
                 - Name: "SourceOutput"
               RunOrder: 1
+        - Name: "Execute"
+          Actions:
+            - Name: "StateMachine"
+              ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Version: "1"
+                Provider: StepFunctions
+              Configuration:
+                StateMachineArn: !ImportValue StateMachineArn
+              RunOrder: 1
