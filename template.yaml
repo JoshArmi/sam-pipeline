@@ -11,6 +11,9 @@ Parameters:
   EmailAddress:
     Type: String
     Default: josh.armitage@outlook.com
+  TemplateStoreBucketName:
+    Type: String
+    Default: josharmi-templatestore
 
 Resources:
   SimpleStateMachine:
@@ -150,6 +153,7 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       AccessControl: Private
+      BucketName: !Ref TemplateStoreBucketName
 
   TemplateStorePolicy:
     Type: AWS::S3::BucketPolicy
